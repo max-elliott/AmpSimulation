@@ -197,6 +197,49 @@ class Up2d(nn.Module):
 class GeneratorWorld(nn.Module):
     """docstring for Generator."""
     def __init__(self, num_classes=4):
+        super(GeneratorMel, self).__init__()
+        self.num_classes = num_classes
+
+        self.down1 = Down2d(1, 32, (9,3), (1,1), (4,1))
+        self.down2 = Down2d(32, 64, (8,4), (2,2), (3,1))
+        self.down3 = Down2d(64, 128, (8,4), (2,2), (3,1))
+        self.down4 = Down2d(128, 64, (5,3), (1,1), (2,1))
+        self.down5 = Down2d(64, 5, (5,9), (1,9), (2,0))
+
+
+        self.up1 = Up2d(5, 64, (5,9), (1,9), (2,0))
+        self.up2 = Up2d(64, 128, (5,3), (1,1), (2,1))
+        self.up3 = Up2d(128, 64, (8,4), (2,2), (3,1))
+        self.up4 = Up2d(64, 32, (8,4), (2,2), (3,1))
+
+        self.deconv = nn.ConvTranspose2d(32, 1, (9,3), (1,1), (4,1))
+
+    def forward(self, x):
+        # x = x.unsqueeze(1)
+        # x = self.downsample(x)
+
+        x = self.down1(x)
+        # print(x.size())
+        x = self.down2(x)
+        # print(x.size())
+        x = self.down3(x)
+        # print(x.size())
+        x = self.down4(x)
+        # print(x.size())
+        x = self.down5(x)
+        # print(x.size())
+
+        x = self.up1(x)
+        x = self.up2(x)
+        x = self.up3(x)
+        x = self.up4(x)
+        x = self.deconv(x)
+        return x
+
+
+class GeneratorMel(nn.Module):
+    """docstring for Generator."""
+    def __init__(self, num_classes=4):
         super(GeneratorWorld, self).__init__()
         # self.downsample = nn.Sequential(
         # self.down1 = Down2d(1, 32, (3,9), (1,1), (1,4))   #36
@@ -266,15 +309,14 @@ class GeneratorWorld(nn.Module):
         x = torch.cat([x, c5], dim=1)
         x = self.deconv(x)
         return x
-
-class GeneratorMel(nn.Module):
-    def __init__(self, num_classes):
-        super(GeneratorMel, self).__init__()
-        self.unet = unet_model.UNet(1,1)
-
-    def forward(self, x, c):
-        x = self.unet(x)
-        return x
+# class GeneratorMel(nn.Module):
+#     def __init__(self, num_classes):
+#         super(GeneratorMel, self).__init__()
+#         self.unet = unet_model.UNet(1,1)
+#
+#     def forward(self, x):
+#         x = self.unet(x)
+#         return x
 
 
 class Discriminator(nn.Module):
